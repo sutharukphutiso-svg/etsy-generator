@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Etsy Listing Generator - Cross Stitch</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fdf8f3;--panel:#fff;--border:#e8e0d5;--text:#1a1410;
+  --muted:#9a8f85;--accent:#c6762a;--accent2:#f0b87a;
+  --green:#2d6a4f;--light:#fef3e8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:var(--accent);padding:20px 32px;display:flex;align-items:center;gap:16px}
+.header h1{font-family:"DM Serif Display",serif;font-size:24px;color:#fff}
+.header p{font-size:13px;color:rgba(255,255,255,0.8);margin-top:2px}
+.logo{width:44px;height:44px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.container{max-width:1200px;margin:0 auto;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:800px){.container{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px}
+.card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.card-title .icon{width:28px;height:28px;background:var(--light);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+.field input,.field select,.field textarea{
+  width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;
+  font-family:"DM Sans",sans-serif;font-size:13px;color:var(--text);
+  background:var(--panel);outline:none;transition:border-color 0.15s
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:70px;line-height:1.5}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{padding:10px 18px;font-size:13px;font-family:"DM Sans",sans-serif;border-radius:8px;cursor:pointer;font-weight:500;transition:all 0.15s;border:none}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:#a85e1f}
+.btn.secondary{background:var(--light);color:var(--accent);border:1px solid var(--accent2)}
+.btn.secondary:hover{background:#fde8cc}
+.btn.green{background:var(--green);color:#fff}
+.btn.green:hover{background:#1e4d38}
+.btn.sm{padding:6px 12px;font-size:12px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.output-box{
+  background:#f9f6f2;border:1px solid var(--border);border-radius:8px;
+  padding:16px;font-size:13px;line-height:1.8;color:var(--text);
+  white-space:pre-wrap;font-family:"DM Sans",sans-serif;
+  max-height:500px;overflow-y:auto;min-height:200px
+}
+.output-box.empty{color:var(--muted);font-style:italic}
+.tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{background:var(--light);color:var(--accent);border:1px solid var(--accent2);border-radius:20px;padding:3px 10px;font-size:11px;cursor:pointer;transition:all 0.15s}
+.tag:hover{background:var(--accent);color:#fff}
+.tag.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+.section-label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px}
+.preview-section{background:var(--light);border-radius:8px;padding:12px;margin-bottom:12px}
+.preview-section h3{font-size:12px;font-weight:500;color:var(--accent);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.preview-section p{font-size:13px;line-height:1.7;color:var(--text)}
+.copy-success{display:none;background:#d4edda;color:#155724;padding:8px 12px;border-radius:6px;font-size:12px;margin-top:8px}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:7px 14px;font-size:12px;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--panel);color:var(--muted);font-family:"DM Sans",sans-serif}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.char-count{font-size:10px;color:var(--muted);text-align:right;margin-top:2px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:500}
+.badge.ok{background:#d4edda;color:#155724}
+.badge.warn{background:#fff3cd;color:#856404}
+.badge.over{background:#f8d7da;color:#721c24}
+.tip{background:#e8f4f8;border-left:3px solid #5bc0de;border-radius:0 6px 6px 0;padding:8px 12px;font-size:11px;color:#31708f;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🧵</div>
+  <div>
+    <h1>Etsy Listing Generator</h1>
+    <p>Cross Stitch Pattern — Ready-to-sell description</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- LEFT: Input Form -->
+  <div>
+
+    <!-- Pattern Info -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title"><div class="icon">📐</div>Pattern Details</div>
+
+      <div class="field">
+        <label>Pattern Title (for Etsy listing)</label>
+        <input type="text" id="title" placeholder="e.g. Fox and Flowers Cross Stitch Pattern PDF" oninput="updateCharCount('title','title-count',140)">
+        <div class="char-count"><span id="title-count">0</span>/140 <span id="title-badge"></span></div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Stitches Wide</label>
+          <input type="number" id="sw" value="200" oninput="calcSize()">
+        </div>
+        <div class="field">
+          <label>Stitches Tall</label>
+          <input type="number" id="sh" value="200" oninput="calcSize()">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>DMC Colors</label>
+          <input type="number" id="colors" value="25" min="1" max="100">
+        </div>
+        <div class="field">
+          <label>Fabric Count</label>
+          <select id="fabric" onchange="calcSize()">
+            <option value="11">Aida 11 ct</option>
+            <option value="14" selected>Aida 14 ct</option>
+            <option value="16">Aida 16 ct</option>
+            <option value="18">Aida 18 ct</option>
+            <option value="28">Evenweave 28 ct</option>
+            <option value="32">Evenweave 32 ct</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row3" id="size-display">
+        <div class="field">
+          <label>Width (inches)</label>
+          <input type="text" id="w-in" readonly style="background:#f5f5f5">
+        </div>
+        <div class="field">
+          <label>Height (inches)</label>
+          <input type="text" id="h-in" readonly style="background:#f5f5f5">
+        </div>
+        <div class="field">
+          <label>Hoop Size</label>
+          <input type="text" id="hoop" readonly style="background:#f5f5f5">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Pattern Subject / Description</label>
+        <textarea id="subject" placeholder="e.g. A cute fox mother and baby surrounded by wildflowers and mushrooms — perfect for nursery decor or a heartfelt gift."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Your Shop Name (optional)</label>
+        <input type="text" id="shop" placeholder="e.g. StitchWithLove">
+      </div>
+    </div>
+
+    <!-- What's Included -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title"><div class="icon">📦</div>What's Included in PDF</div>
+      <div class="tip">Tick all files you include in your PDF download</div>
+
+      <div id="includes-list">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" checked data-val="PDF Pattern in Color (3 grid sizes)"> PDF Pattern in Color (3 grid sizes)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" checked data-val="PDF Pattern in Black and White (3 grid sizes)"> PDF Pattern in Black and White (3 grid sizes)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" checked data-val="DMC Floss List with color symbols"> DMC Floss List with color symbols
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" checked data-val="Thread length calculations"> Thread length calculations
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" checked data-val="Compatible with Pattern Keeper app"> Compatible with Pattern Keeper app
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" data-val="Full-page chart for printing"> Full-page chart for printing
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" data-val="Fabric recommendations"> Fabric recommendations
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer">
+          <input type="checkbox" data-val="Backstitch guide"> Backstitch guide
+        </label>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title"><div class="icon">🏷</div>Etsy Tags (max 13)</div>
+      <div class="tip">Click to select — Etsy allows max 13 tags, 20 chars each</div>
+      <div class="tag-list" id="tag-list"></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">Selected: <b id="tag-count">0</b>/13</div>
+    </div>
+
+    <!-- Generate Button -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn primary" style="flex:1" onclick="generate()">Generate Listing</button>
+      <button class="btn secondary" onclick="reset()">Reset</button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Output -->
+  <div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title"><div class="icon">📝</div>Generated Listing</div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('full',this)">Full Description</div>
+        <div class="tab" onclick="showTab('title',this)">Title</div>
+        <div class="tab" onclick="showTab('tags',this)">Tags</div>
+      </div>
+
+      <div id="out-full">
+        <div class="output-box empty" id="output-box">Click "Generate Listing" to create your Etsy description...</div>
+        <div class="copy-success" id="copy-msg">Copied to clipboard!</div>
+        <div class="btn-row">
+          <button class="btn green" onclick="copyText('output-box','copy-msg')">Copy Description</button>
+          <button class="btn secondary sm" onclick="copySection('title-only')">Copy Title Only</button>
+        </div>
+      </div>
+
+      <div id="out-title" style="display:none">
+        <div class="output-box" id="title-preview-box" style="min-height:80px"></div>
+        <div class="char-count"><span id="title-preview-count">0</span>/140 chars <span id="title-preview-badge"></span></div>
+        <div class="btn-row">
+          <button class="btn green" onclick="copyText('title-preview-box','copy-msg2')">Copy Title</button>
+          <div class="copy-success" id="copy-msg2">Copied!</div>
+        </div>
+      </div>
+
+      <div id="out-tags" style="display:none">
+        <div class="output-box" id="tags-box" style="min-height:120px"></div>
+        <div class="btn-row">
+          <button class="btn green" onclick="copyText('tags-box','copy-msg3')">Copy Tags</button>
+          <div class="copy-success" id="copy-msg3">Copied!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Sections -->
+    <div class="card">
+      <div class="card-title"><div class="icon">👁</div>Section Preview</div>
+      <div id="preview-sections">
+        <div style="color:var(--muted);font-size:13px">Generate listing to see section breakdown</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Suggested tags
+const ALL_TAGS = [
+  "cross stitch pattern","cross stitch pdf","instant download","embroidery pattern",
+  "counted cross stitch","dmc pattern","needlework pattern","cross stitch gift",
+  "pdf pattern","digital download","cross stitch kit","hand embroidery",
+  "beginner cross stitch","modern cross stitch","animal cross stitch",
+  "floral cross stitch","nature cross stitch","home decor embroidery",
+  "nursery cross stitch","cute cross stitch","fox cross stitch","flower pattern",
+  "aida fabric pattern","needlepoint pattern","embroidery design"
+];
+
+let selectedTags = new Set([
+  "cross stitch pattern","cross stitch pdf","instant download","dmc pattern",
+  "embroidery pattern","counted cross stitch","pdf pattern","digital download",
+  "modern cross stitch","needlework pattern","cross stitch gift","aida fabric pattern"
+]);
+
+function initTags(){
+  const el = document.getElementById("tag-list");
+  el.innerHTML = ALL_TAGS.map(t=>
+    `<div class="tag${selectedTags.has(t)?' selected':''}" onclick="toggleTag('${t}',this)">${t}</div>`
+  ).join("");
+  updateTagCount();
+}
+
+function toggleTag(t, el){
+  if(selectedTags.has(t)){
+    selectedTags.delete(t);
+    el.classList.remove("selected");
+  } else if(selectedTags.size < 13){
+    selectedTags.add(t);
+    el.classList.add("selected");
+  }
+  updateTagCount();
+}
+
+function updateTagCount(){
+  document.getElementById("tag-count").textContent = selectedTags.size;
+}
+
+function calcSize(){
+  const sw = parseFloat(document.getElementById("sw").value)||200;
+  const sh = parseFloat(document.getElementById("sh").value)||200;
+  const ct = parseFloat(document.getElementById("fabric").value)||14;
+  const wIn = (sw/ct).toFixed(2);
+  const hIn = (sh/ct).toFixed(2);
+  const hoop = Math.ceil(Math.max(sw,sh)/ct + 2);
+  document.getElementById("w-in").value = wIn+'"';
+  document.getElementById("h-in").value = hIn+'"';
+  document.getElementById("hoop").value = hoop+'"';
+}
+
+function updateCharCount(inputId, countId, max){
+  const len = document.getElementById(inputId).value.length;
+  document.getElementById(countId).textContent = len;
+  const badge = document.getElementById(inputId+"-badge");
+  if(badge){
+    if(len > max){ badge.textContent="Over limit"; badge.className="badge over"; }
+    else if(len > max*0.8){ badge.textContent="Good"; badge.className="badge ok"; }
+    else { badge.textContent=""; badge.className=""; }
+  }
+}
+
+function getIncludes(){
+  return Array.from(document.querySelectorAll('#includes-list input[type=checkbox]:checked'))
+    .map(el=>el.dataset.val);
+}
+
+function generate(){
+  const title = document.getElementById("title").value.trim();
+  const sw = parseInt(document.getElementById("sw").value)||200;
+  const sh = parseInt(document.getElementById("sh").value)||200;
+  const colors = parseInt(document.getElementById("colors").value)||25;
+  const fabricEl = document.getElementById("fabric");
+  const fabricName = fabricEl.options[fabricEl.selectedIndex].text;
+  const ct = parseInt(fabricEl.value);
+  const wIn = (sw/ct).toFixed(2);
+  const hIn = (sh/ct).toFixed(2);
+  const wCm = (sw/ct*2.54).toFixed(2);
+  const hCm = (sh/ct*2.54).toFixed(2);
+  const hoop = Math.ceil(Math.max(sw,sh)/ct + 2);
+  const subject = document.getElementById("subject").value.trim();
+  const shop = document.getElementById("shop").value.trim();
+  const includes = getIncludes();
+  const tags = Array.from(selectedTags);
+
+  const listingTitle = title || `Cross Stitch Pattern PDF ${sw}x${sh} - Instant Download - ${colors} DMC Colors`;
+
+  const desc = `${subject ? subject+"\n\n" : ""}✦ INSTANT DIGITAL DOWNLOAD — No physical item will be shipped ✦
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+PURCHASE DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━
+${includes.map(i=>"✔ "+i).join("\n")}
+
+All patterns contain a maximum of 20–25 colors.
+Paper size: A4 (210 × 297 mm / 8.3 × 11.7 inches)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+PATTERN SIZE
+━━━━━━━━━━━━━━━━━━━━━━━━━
+DMC colors: ${colors}
+Fabric: ${fabricName}
+Stitches: ${sw} × ${sh}
+Size: ${wIn}" × ${hIn}" (${wCm} × ${hCm} cm)
+Hoop size: ${hoop} inches
+
+Also works on:
+• Aida 16 ct — ${(sw/16).toFixed(1)}" × ${(sh/16).toFixed(1)}" (${(sw/16*2.54).toFixed(1)} × ${(sh/16*2.54).toFixed(1)} cm)
+• Aida 18 ct — ${(sw/18).toFixed(1)}" × ${(sh/18).toFixed(1)}" (${(sw/18*2.54).toFixed(1)} × ${(sh/18*2.54).toFixed(1)} cm)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+HOW TO RECEIVE YOUR FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━
+After payment is confirmed, your files will be available for instant download in your Etsy account under "Purchases and Reviews." You will also receive an email from Etsy with the download link.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT NOTES
+━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ This is a PDF PATTERN only — no fabric, thread, or materials included
+❌ No refunds due to the digital nature of this product
+❌ For personal use only — not for commercial resale
+✔ You MAY sell finished stitched items made from this pattern
+✔ Compatible with Pattern Keeper, Stitchbird, and Stitch Fiddle apps
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+COPYRIGHT
+━━━━━━━━━━━━━━━━━━━━━━━━━
+${shop ? "© "+shop+" — " : ""}All designs are original and protected by copyright. Sharing, redistributing, or reselling the digital files is strictly prohibited.
+
+If you have any questions, please feel free to message me before purchasing. Happy Stitching! 🧵`;
+
+  document.getElementById("output-box").textContent = desc;
+  document.getElementById("output-box").classList.remove("empty");
+
+  // Title tab
+  document.getElementById("title-preview-box").textContent = listingTitle;
+  const tlen = listingTitle.length;
+  document.getElementById("title-preview-count").textContent = tlen;
+  const tb = document.getElementById("title-preview-badge");
+  tb.textContent = tlen > 140 ? "Over limit!" : tlen > 100 ? "Excellent" : "Good";
+  tb.className = "badge " + (tlen > 140 ? "over" : "ok");
+
+  // Tags tab
+  document.getElementById("tags-box").textContent = tags.join(", ");
+
+  // Preview sections
+  const ps = document.getElementById("preview-sections");
+  ps.innerHTML = `
+    <div class="preview-section">
+      <h3>Title (${listingTitle.length}/140 chars)</h3>
+      <p>${listingTitle}</p>
+    </div>
+    <div class="preview-section">
+      <h3>Pattern Size</h3>
+      <p>
+        <b>DMC Colors:</b> ${colors}<br>
+        <b>Fabric:</b> ${fabricName}<br>
+        <b>Stitches:</b> ${sw} × ${sh}<br>
+        <b>Size:</b> ${wIn}" × ${hIn}" (${wCm} × ${hCm} cm)<br>
+        <b>Hoop:</b> ${hoop}"
+      </p>
+    </div>
+    <div class="preview-section">
+      <h3>Included (${includes.length} items)</h3>
+      <p>${includes.map(i=>"✔ "+i).join("<br>")}</p>
+    </div>
+    <div class="preview-section">
+      <h3>Tags (${tags.length}/13)</h3>
+      <p style="font-size:12px">${tags.map(t=>`<span style="background:var(--light);padding:2px 6px;border-radius:4px;margin:2px;display:inline-block">${t}</span>`).join(" ")}</p>
+    </div>
+  `;
+}
+
+function showTab(tab, el){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("out-full").style.display = tab==="full"?"block":"none";
+  document.getElementById("out-title").style.display = tab==="title"?"block":"none";
+  document.getElementById("out-tags").style.display = tab==="tags"?"block":"none";
+}
+
+function copyText(boxId, msgId){
+  const text = document.getElementById(boxId).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const msg = document.getElementById(msgId);
+    msg.style.display = "block";
+    setTimeout(()=>msg.style.display="none", 2500);
+  });
+}
+
+function copySection(sec){
+  if(sec==="title-only"){
+    const t = document.getElementById("title").value.trim() ||
+      `Cross Stitch Pattern PDF - Instant Download - ${document.getElementById("colors").value} DMC Colors`;
+    navigator.clipboard.writeText(t).then(()=>{
+      const msg = document.getElementById("copy-msg");
+      msg.textContent = "Title copied!";
+      msg.style.display = "block";
+      setTimeout(()=>{msg.style.display="none";msg.textContent="Copied to clipboard!";}, 2000);
+    });
+  }
+}
+
+function reset(){
+  document.getElementById("title").value="";
+  document.getElementById("sw").value="200";
+  document.getElementById("sh").value="200";
+  document.getElementById("colors").value="25";
+  document.getElementById("fabric").value="14";
+  document.getElementById("subject").value="";
+  document.getElementById("shop").value="";
+  document.getElementById("output-box").textContent="Click \"Generate Listing\" to create your Etsy description...";
+  document.getElementById("output-box").classList.add("empty");
+  document.getElementById("preview-sections").innerHTML='<div style="color:var(--muted);font-size:13px">Generate listing to see section breakdown</div>';
+  calcSize();
+}
+
+// Init
+initTags();
+calcSize();
+document.getElementById("title").addEventListener("input", ()=>updateCharCount("title","title-count",140));
+</script>
+</body>
+</html>
